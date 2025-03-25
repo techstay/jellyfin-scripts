@@ -7,7 +7,7 @@
 ### 初始化
 
 ```py
-pdm update
+uv sync
 ```
 
 ### 运行脚本
@@ -16,18 +16,18 @@ pdm update
 
 ```shell
 # 批量修改电视剧/动漫名称
-python rename_shows.py <show_dir>
+uv run rename_shows.py <show_dir>
 # 专门修改物语系列动画
-python rename_monogatari.py <show_dir>
+uv run rename_monogatari.py <show_dir>
 # 批量修改字幕匹配视频文件
-python rename_subtitles.py <show_dir>
+uv run rename_subtitles.py <show_dir>
 ```
 
 ### 测试
 
 ```bash
 # 测试并显示输出
-pytest -s
+uv run pytest -s
 # 测试并显示输出，只测试某关键字
-pytest -s -k deepseek
+uv run pytest -s -k deepseek
 ```
