@@ -1,7 +1,6 @@
 import argparse
 import re
 from pathlib import Path
-from typing import List
 
 from my_utils.my_logger import get_logger
 
@@ -29,6 +28,7 @@ def scan_folder(folder: Path):
     reg = re.compile(r"[Ss]eason (\d+)")
     show_name: str = ""
     season: int = 1
+    # If current folder is a season folder, then its parent folder is the show name
     if reg.match(folder.name):
         show_name = folder.parent.name
         season = int(reg.match(folder.name).group(1))
@@ -57,53 +57,40 @@ def handle_files(folder: Path, show_name: str, season: int):
         if f.is_dir() and f.name.lower() in ["extra", "special"]
     ]
 
-    if extra_dirs.__len__() > 0:
+    if len(extra_dirs) > 0:
         for extra_dir in extra_dirs:
             extra_files = filter_files(extra_dir)
-            if extra_files.__len__() > 0:
+            if len(extra_files) > 0:
                 rename_files(extra_files, show_name, season)
 
 
-def filter_files(folder: Path) -> List[Path]:
+def filter_files(folder: Path) -> list[Path]:
     file_types = [".mkv", ".mp4", ".ass", ".rmvb", ".ssa", ".srt"]
     return [f for f in folder.iterdir() if f.is_file() and f.suffix in file_types]
 
 
-def rename_files(file_list: List[Path], show_name: str, season: int):
+def rename_files(file_list: list[Path], show_name: str, season: int):
     """Here length of file_list should be greater than 0"""
     lines = [f"{show_name} 第{season}季"]
     lines.extend(f.name for f in file_list)
     message = "\n".join(lines)
 
-    from my_utils.my_ai import deepseek_client
+    from my_utils.my_ai import gemini_client as client
 
-    stream = deepseek_client.chat(
-        Path("prompts/renaming_prompt.txt").read_text(), message
-    ).response
-    new_filenames = []
-    line = ""
-    for chunk in stream:
-        if chunk.choices:
-            delta = chunk.choices[0].delta
-            content = delta.content if delta.content else ""
-            line += content
-            if content.endswith("\n"):
-                new_filenames.append(line.strip())
-                old_file = file_list[len(new_filenames) - 1]
-                logger.info(f"{old_file.name} => {old_file.parent / new_filenames[-1]}")
-                line = ""
-    if line.strip():
-        new_filenames.append(line.strip())
-        logger.info(
-            f"{file_list[len(new_filenames) - 1].name} => {file_list[0].parent / new_filenames[-1]}"
-        )
+    response = (
+        client.chat(Path("prompts/renaming_prompt.txt").read_text(), message)
+        .collect()
+        .strip()
+    )
 
+    new_filenames = response.split("\n")
     if len(file_list) != len(new_filenames):
         logger.error("Error: Number of files and new filenames are not equal!")
         return
 
     for old_file, new_file in zip(file_list, new_filenames):
         old_file.rename(old_file.parent / new_file)
+        logger.info(f"{old_file.name} => {new_file}")
     logger.info("Renaming files successfully!")
 
 

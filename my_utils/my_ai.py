@@ -53,7 +53,7 @@ deepseek_client = AIClient(
 
 
 siliconflow_client = AIClient(
-    os.getenv("SILICONFLOW_DEEPSEEK_API_KEY"),
+    os.getenv("SILICONFLOW_API_KEY"),
     base_url="https://api.siliconflow.cn",
     model="deepseek-ai/DeepSeek-R1",
 )
@@ -68,4 +68,10 @@ gptdos_client = AIClient(
     os.getenv("GPTDOS_API_KEY"),
     base_url="https://api.gptdos.com/v1",
     model="gpt-4o-mini",
+)
+
+gemini_client = AIClient(
+    api_key=os.getenv("GEMINI_API_KEY", ""),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    model="gemini-2.0-flash",
 )

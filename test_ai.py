@@ -20,3 +20,13 @@ def test_gptdos():
         message=message,
     )
     gptdos_client.stream_print()
+
+
+def test_gemini():
+    from my_utils.my_ai import gemini_client
+
+    gemini_client.chat(
+        prompt=prompt,
+        message=message,
+    )
+    gemini_client.stream_print()

@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import List
 
 from my_utils.my_logger import get_logger
 
@@ -32,15 +31,19 @@ def scan_files(folder: Path):
     rename_subtitles(videos, subtitles)
 
 
-def rename_subtitles(videos: List[Path], subtitles: List[Path]):
+def rename_subtitles(videos: list[Path], subtitles: list[Path]):
     from my_utils.my_ai import deepseek_client
 
     message = (
         "\n".join(f.name for f in videos) + "\n" + "\n".join(f.name for f in subtitles)
     )
-    response = deepseek_client.chat(
-        Path("prompts/renaming_subtitles_prompt.txt").read_text(), message
-    ).collect()
+    response = (
+        deepseek_client.chat(
+            Path("prompts/renaming_subtitles_prompt.txt").read_text(), message
+        )
+        .collect()
+        .strip()
+    )
 
     new_subtitles = response.split("\n")
 
@@ -50,14 +53,14 @@ def rename_subtitles(videos: List[Path], subtitles: List[Path]):
         return
 
     for sub, new_sub in zip(subtitles, new_subtitles):
-        print(f"{sub.name} => {sub.parent / new_sub}")
+        print(f"{sub.name} => {new_sub}")
 
     choice = input("Are you sure to rename these files? (y/n)")
-    if choice.lower() not in "y yes".split(" "):
+    if choice.lower() in "n no nop".split(" "):
         return
     for sub, new_sub in zip(subtitles, new_subtitles):
         sub.rename(sub.parent / new_sub)
-        logger.info(f"{sub.name} => {sub.parent / new_sub}")
+        logger.info(f"{sub.name} => {new_sub}")
 
 
 if __name__ == "__main__":

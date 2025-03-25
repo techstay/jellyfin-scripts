@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import List
 
 from my_utils.my_logger import get_logger
 
@@ -28,13 +27,17 @@ def scan_files(folder: Path):
     rename_files(files)
 
 
-def rename_files(files: List[Path]):
+def rename_files(files: list[Path]):
     from my_utils.my_ai import deepseek_client
 
-    response = deepseek_client.chat(
-        Path("prompts/monogatari_sort_prompt.txt").read_text(),
-        "\n".join(f.name for f in files),
-    ).collect()
+    response = (
+        deepseek_client.chat(
+            Path("prompts/monogatari_sort_prompt.txt").read_text(),
+            "\n".join(f.name for f in files),
+        )
+        .collect()
+        .strip()
+    )
     new_files = response.split("\n")
 
     if len(new_files) != len(files):
@@ -43,7 +46,7 @@ def rename_files(files: List[Path]):
 
     for file, new_file in zip(files, new_files):
         file.rename(file.parent / new_file)
-        logger.info(f"{file.name} => {file.parent / new_file}")
+        logger.info(f"{file.name} => {new_file}")
 
 
 if __name__ == "__main__":
